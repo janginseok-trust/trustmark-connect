@@ -1,40 +1,43 @@
-import { headers } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
+import { getFirestore, doc, setDoc } from 'firebase/firestore'
+import { app } from '@/lib/firebase'
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2023-10-16' as any,
 })
 
-export async function POST() {
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+
+export async function POST(req: NextRequest) {
+  const rawBody = await req.arrayBuffer()
+  const sig = req.headers.get('stripe-signature')
+
+  let event: Stripe.Event
+
   try {
-    const headerList = await headers()
-    const protocol = headerList.get('x-forwarded-proto') || 'http'
-    const host = headerList.get('host') || 'localhost:3000'
-    const origin = `${protocol}://${host}`
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Trustmark Pro',
-            },
-            unit_amount: 999,
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${origin}/my-records?status=success`,
-      cancel_url: `${origin}/upgrade?status=cancel`,
-    })
-
-    return NextResponse.json({ url: session.url })
+    event = stripe.webhooks.constructEvent(rawBody, sig!, endpointSecret)
   } catch (err) {
-    console.error('❌ Stripe checkout error:', err)
-    return new NextResponse('Stripe checkout failed', { status: 500 })
+    console.error('❌ Webhook signature verification failed.', err)
+    return new Response('Webhook Error', { status: 400 })
   }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    const wallet = session.metadata?.walletAddress
+
+    if (wallet) {
+      const db = getFirestore(app)
+      await setDoc(doc(db, 'users', wallet), { isPro: true }, { merge: true })
+      console.log(`✅ Pro access granted to ${wallet}`)
+    }
+  }
+
+  return new Response('Success', { status: 200 })
 }
