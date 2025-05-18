@@ -30,28 +30,30 @@ export default function VerifyRecordPage() {
     loadRecord()
   }, [id])
 
-  if (loading) return <div className="p-6">📦 공유된 기록을 불러오는 중입니다...</div>
-  if (!record) return <div className="p-6 text-red-500">❌ 해당 기록을 찾을 수 없습니다.</div>
+  if (loading) return <div className="p-6">📦 Loading shared record...</div>
+  if (!record) return <div className="p-6 text-red-500">❌ Record not found.</div>
 
   const createdAt =
     record.createdAt instanceof Timestamp
       ? record.createdAt.toDate().toLocaleString()
-      : '날짜 없음'
+      : 'No date available'
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🔍 공유된 기록</h1>
+      <h1 className="text-2xl font-bold mb-4">🔍 Verified Shared Record</h1>
       <div className="border p-4 rounded space-y-2">
-        <p><strong>🧾 메시지:</strong> {record.message || '내용 없음'}</p>
-        <p><strong>🕒 생성 시각:</strong> {createdAt}</p>
-        <p><strong>🧑‍💼 서명자:</strong> {record.owner || '미확인'}</p>
-        <div className="mt-4 text-green-600 font-medium">✅ 이 기록은 Trustmark에서 인증된 데이터입니다.</div>
+        <p><strong>🧾 Message:</strong> {record.message || 'No content available'}</p>
+        <p><strong>🕒 Created At:</strong> {createdAt}</p>
+        <p><strong>🧑‍💼 Signer:</strong> {record.owner || 'Unknown'}</p>
+        <div className="mt-4 text-green-600 font-medium">
+          ✅ This record is verified and trusted by Trustmark.
+        </div>
       </div>
 
       <div className="mt-8 border-t pt-4 text-sm text-center text-gray-600">
-        이와 같은 기록을 남기고 공유하려면
+        Want to create and share trusted records like this?
         <a href="/buy" className="ml-1 text-blue-600 underline hover:text-blue-800">
-          Pro로 업그레이드하세요 →
+          Upgrade to Pro →
         </a>
       </div>
     </main>

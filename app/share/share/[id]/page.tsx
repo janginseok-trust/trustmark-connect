@@ -35,7 +35,7 @@ export default function SharedRecordPage() {
         const data = snap.data() as Proof
         setRecord(data)
       } catch (e) {
-        console.error('❌ 공유 열람 실패:', e)
+        console.error('❌ Failed to load shared record:', e)
         setError(true)
       } finally {
         setLoading(false)
@@ -54,10 +54,10 @@ export default function SharedRecordPage() {
       const element = document.createElement('div')
       element.innerHTML = `
         <h1>🧾 Trust Record</h1>
-        <p><strong>메시지:</strong> ${record.message}</p>
-        <p><strong>서명자:</strong> ${record.address}</p>
-        <p><strong>서명값:</strong> ${record.signature}</p>
-        <p><strong>생성 시각:</strong> ${
+        <p><strong>Message:</strong> ${record.message}</p>
+        <p><strong>Signer:</strong> ${record.address}</p>
+        <p><strong>Signature:</strong> ${record.signature}</p>
+        <p><strong>Created At:</strong> ${
           record.createdAt
             ? new Date(record.createdAt.seconds * 1000).toLocaleString()
             : 'Unknown'
@@ -70,15 +70,15 @@ export default function SharedRecordPage() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       }).from(element).save()
     } catch (e) {
-      alert('❌ 다운로드 실패')
+      alert('❌ Failed to download PDF')
       console.error(e)
     } finally {
       setDownloading(false)
     }
   }
 
-  if (loading) return <p className="p-4 animate-pulse">🔍 기록을 불러오는 중입니다...</p>
-  if (error || !record) return <p className="p-4 text-red-500">⚠️ 유효하지 않거나 삭제된 기록입니다.</p>
+  if (loading) return <p className="p-4 animate-pulse">🔍 Loading record...</p>
+  if (error || !record) return <p className="p-4 text-red-500">⚠️ This record is invalid or has been deleted.</p>
 
   const createdAt = record.createdAt
     ? new Date(record.createdAt.seconds * 1000).toLocaleString()
@@ -86,12 +86,12 @@ export default function SharedRecordPage() {
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">🔗 공유된 Trust 기록</h1>
+      <h1 className="text-2xl font-bold mb-4">🔗 Shared Trust Record</h1>
       <div className="border p-4 rounded bg-white shadow mb-4">
-        <p className="mb-2"><strong>🕒 생성 시각:</strong> {createdAt}</p>
-        <p className="mb-2 break-words"><strong>✉️ 메시지:</strong> {record.message}</p>
-        <p className="mb-2 break-all text-sm text-gray-500"><strong>👤 서명자:</strong> {record.address}</p>
-        <p className="break-all text-sm text-gray-400"><strong>🖋️ 서명값:</strong> {record.signature}</p>
+        <p className="mb-2"><strong>🕒 Created At:</strong> {createdAt}</p>
+        <p className="mb-2 break-words"><strong>✉️ Message:</strong> {record.message}</p>
+        <p className="mb-2 break-all text-sm text-gray-500"><strong>👤 Signer:</strong> {record.address}</p>
+        <p className="break-all text-sm text-gray-400"><strong>🖋️ Signature:</strong> {record.signature}</p>
       </div>
 
       <button
@@ -99,7 +99,7 @@ export default function SharedRecordPage() {
         disabled={downloading}
         className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:opacity-50"
       >
-        {downloading ? '다운로드 중...' : '📄 PDF 다운로드'}
+        {downloading ? 'Downloading...' : '📄 Download PDF'}
       </button>
     </div>
   )

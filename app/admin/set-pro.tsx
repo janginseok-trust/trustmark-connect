@@ -10,7 +10,7 @@ export default function SetProAdminPage() {
   const [done, setDone] = useState(false)
 
   const handleSetPro = async () => {
-    if (!uid || !email) return alert('UID와 이메일을 입력하세요.')
+    if (!uid || !email) return alert('Please enter both UID and email.')
 
     await setDoc(doc(db, 'users', uid), {
       uid,
@@ -26,16 +26,16 @@ export default function SetProAdminPage() {
 
   return (
     <div className="p-8 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold mb-4">👑 Pro 사용자 수동 설정</h1>
+      <h1 className="text-xl font-bold mb-4">👑 Set Pro Status Manually</h1>
       <input
         className="border p-2 mb-2 w-full"
-        placeholder="사용자 UID"
+        placeholder="User UID"
         value={uid}
         onChange={(e) => setUid(e.target.value)}
       />
       <input
         className="border p-2 mb-4 w-full"
-        placeholder="사용자 이메일"
+        placeholder="User Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -43,9 +43,9 @@ export default function SetProAdminPage() {
         onClick={handleSetPro}
         className="bg-black text-white px-4 py-2 rounded"
       >
-        ✅ Pro 설정하기
+        ✅ Set Pro
       </button>
-      {done && <p className="text-green-600 mt-4">설정 완료되었습니다!</p>}
+      {done && <p className="text-green-600 mt-4">Successfully set as Pro!</p>}
     </div>
   )
 }
