@@ -63,3 +63,5 @@ export default function BuyPage() {
         </div>
       )}
     </main>
+  )
+}
