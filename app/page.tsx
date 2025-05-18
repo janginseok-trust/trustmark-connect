@@ -4,6 +4,8 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
+export const dynamic = 'force-dynamic' // ✅ Vercel에서 동적 렌더링 강제
+
 function PageInner() {
   const params = useSearchParams()
   const ref = params.get('ref')
