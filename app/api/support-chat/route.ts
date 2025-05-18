@@ -1,22 +1,24 @@
+import { OpenAI } from 'openai'
 import { NextResponse } from 'next/server'
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
 export async function POST(req: Request) {
-  const body = await req.json()
-  const messages = body.messages || []
+  try {
+    const { message } = await req.json()
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
+    const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o',
-      messages,
-    }),
-  })
+      messages: [{ role: 'user', content: message }],
+    })
 
-  const data = await res.json()
-  const reply = data?.choices?.[0]?.message?.content || 'Sorry, something went wrong.'
-  return NextResponse.json({ reply })
+    const reply = chatCompletion.choices[0]?.message?.content ?? 'No response'
+
+    return NextResponse.json({ reply })
+  } catch (err) {
+    console.error('❌ AI API error:', err)
+    return new NextResponse('Error calling OpenAI', { status: 500 })
+  }
 }
