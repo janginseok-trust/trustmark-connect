@@ -2,11 +2,7 @@ import { notFound } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
-export default async function ProofPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function ProofPage({ params }: any) {
   const ref = doc(db, 'proofs', params.id)
   const snap = await getDoc(ref)
 

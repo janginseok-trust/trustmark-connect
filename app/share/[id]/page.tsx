@@ -1,69 +1,127 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { useParams } from 'next/navigation'
-import { FaFileAlt, FaLink } from 'react-icons/fa'
-import Link from 'next/link'
 
-export default function SharePage() {
-  const params = useParams()
-  const [data, setData] = useState<any>(null)
+export default function SharedRecordPage() {
+  const { id } = useParams()
+  const [record, setRecord] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      const ref = doc(db, 'proofs', params.id as string)
-      const snap = await getDoc(ref)
-      if (snap.exists()) setData(snap.data())
+    if (!id) return
+
+    const fetchRecord = async () => {
+      try {
+        const docRef = doc(db, 'proofs', id as string)
+        const snap = await getDoc(docRef)
+
+        if (!snap.exists()) {
+          setError(true)
+          return
+        }
+
+        const data = snap.data()
+        setRecord(data)
+      } catch (e) {
+        console.error('❌ Failed to fetch record:', e)
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
     }
-    fetchData()
-  }, [params.id])
+
+    fetchRecord()
+  }, [id])
 
   const handleDownload = async () => {
-    const html2pdf = (await import('html2pdf.js')).default
-    const element = document.getElementById('proof-box')
-    if (!element) return
-    html2pdf().from(element).save()
+    if (!record) return
+    try {
+      setDownloading(true)
+      const html2pdf = (await import('html2pdf.js')).default
+
+      const element = document.createElement('div')
+      element.innerHTML = `
+        <h1>Trust Record</h1>
+        <p><strong>Message:</strong> ${record.message || 'undefined'}</p>
+        <p><strong>Signer:</strong> ${record.address}</p>
+        <p><strong>Signature:</strong> ${record.signature}</p>
+        <p><strong>Created At:</strong> ${
+          record.createdAt?.seconds
+            ? new Date(record.createdAt.seconds * 1000).toLocaleString()
+            : 'Unknown'
+        }</p>
+      `
+
+      await html2pdf()
+        .set({
+          filename: `trustmark-share-${id}.pdf`,
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(element)
+        .save()
+    } catch (e) {
+      alert('❌ Failed to download PDF')
+      console.error(e)
+    } finally {
+      setDownloading(false)
+    }
   }
 
-  if (!data) return null
+  if (loading) {
+    return (
+      <p className="p-4 text-center text-gray-500 animate-pulse">
+        ⏳ Loading record...
+      </p>
+    )
+  }
+
+  if (error || !record) {
+    return (
+      <p className="p-4 text-center text-red-600">
+        ⚠️ Invalid or missing record.
+      </p>
+    )
+  }
+
+  const createdAt = record.createdAt?.seconds
+    ? new Date(record.createdAt.seconds * 1000).toLocaleString()
+    : 'Unknown'
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div
-        id="proof-box"
-        className="border p-6 rounded-lg shadow-md text-center max-w-xl"
+    <div className="max-w-xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">🔗 Shared Trust Record</h1>
+
+      <div className="border p-4 rounded shadow mb-4 text-sm text-gray-800">
+        <p className="mb-2">
+          <strong>🕒 Created At:</strong> {createdAt}
+        </p>
+        <p className="mb-2 break-words">
+          <strong>✉️ Message:</strong>{' '}
+          {record.message || (
+            <span className="italic text-gray-400">undefined</span>
+          )}
+        </p>
+        <p className="mb-2 break-all text-gray-600">
+          <strong>👤 Signer:</strong> {record.address}
+        </p>
+        <p className="break-all text-gray-400">
+          <strong>🖋️ Signature:</strong> {record.signature}
+        </p>
+      </div>
+
+      <button
+        onClick={handleDownload}
+        disabled={downloading}
+        className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:opacity-50"
       >
-        <h1 className="text-2xl font-bold mb-2">🪪 This proof is valid.</h1>
-        <p>This signature has been verified and saved on Trustmark.</p>
-      </div>
-
-      <div className="mt-6 flex gap-3">
-        <button
-          onClick={handleDownload}
-          className="bg-black text-white px-4 py-2 rounded flex items-center gap-2"
-        >
-          <FaFileAlt />
-          Download PDF
-        </button>
-
-        <button
-          onClick={() => navigator.clipboard.writeText(location.href)}
-          className="bg-indigo-500 text-white px-4 py-2 rounded flex items-center gap-2"
-        >
-          <FaLink />
-          Copy Share Link
-        </button>
-
-        <Link
-          href={`/share/${params.id}/detail`}
-          className="bg-gray-700 text-white px-4 py-2 rounded flex items-center gap-2"
-        >
-          <FaFileAlt />
-          View Proof Detail
-        </Link>
-      </div>
+        {downloading ? 'Generating PDF...' : '📄 Download PDF'}
+      </button>
     </div>
   )
 }

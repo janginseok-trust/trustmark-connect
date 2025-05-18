@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. proofs - Pro 사용자만 읽기/쓰기 가능 (본인만)
+    match /proofs/{docId} {
+      allow read, write: if request.auth != null &&
+                         request.auth.token.isPro == true &&
+                         request.auth.uid == resource.data.owner;
+
+      // 공유 링크는 누구나 접근 가능하게 허용
+      allow get: if true;
+    }
+
+    // 2. users - 본인만 접근 가능
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 3. referrals - 본인만 접근 가능
+    match /referrals/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.owner;
+    }
+
+    // 4. points - 본인만 접근 가능
+    match /points/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.owner;
+    }
+
+    // 5. 관리자 권한 - 모든 문서 접근 허용
+    match /{document=**} {
+      allow read, write: if request.auth.token.role == 'admin';
+    }
+  }
+}

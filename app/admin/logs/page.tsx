@@ -1,56 +1,54 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { collection, getDocs, getFirestore } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-
-interface Log {
-  type: 'earn' | 'use'
-  point: number
-  from: string
-  to: string
-  createdAt: string
-}
+import { collection, getDocs } from 'firebase/firestore'
+import { Loader2 } from 'lucide-react'
 
 export default function AdminLogsPage() {
-  const [logs, setLogs] = useState<Log[]>([])
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchLogs = async () => {
-      const snapshot = await getDocs(collection(db, 'point_logs'))
-      const data = snapshot.docs.map(doc => doc.data() as Log)
-      const sorted = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      setLogs(sorted)
+      try {
+        const snapshot = await getDocs(collection(db, 'proofs'))
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        setLogs(data)
+      } catch (err) {
+        console.error('❌ Failed to fetch logs:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchLogs()
   }, [])
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🛠 전체 포인트 로그 (운영자 전용)</h1>
-      <table className="w-full border text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2 border">📌 타입</th>
-            <th className="p-2 border">🪙 포인트</th>
-            <th className="p-2 border">🎯 추천자</th>
-            <th className="p-2 border">🙋‍♂️ 유입자</th>
-            <th className="p-2 border">🕒 시간</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((log, i) => (
-            <tr key={i}>
-              <td className="p-2 border">{log.type === 'earn' ? '적립' : '차감'}</td>
-              <td className="p-2 border">{log.point}</td>
-              <td className="p-2 border">{log.from.slice(0, 8)}...</td>
-              <td className="p-2 border">{log.to.slice(0, 8)}...</td>
-              <td className="p-2 border">{new Date(log.createdAt).toLocaleString()}</td>
-            </tr>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">📜 Upload Logs</h1>
+      {loading ? (
+        <div className="text-center animate-pulse">
+          <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+          Loading logs...
+        </div>
+      ) : logs.length === 0 ? (
+        <p>No logs found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {logs.map((log) => (
+            <li key={log.id} className="p-4 border rounded shadow">
+              <p><strong>Message:</strong> {log.message || 'undefined'}</p>
+              <p><strong>Address:</strong> {log.address}</p>
+              <p><strong>Created:</strong> {log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleString() : 'Unknown'}</p>
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
     </div>
   )
 }

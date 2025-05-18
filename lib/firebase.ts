@@ -1,16 +1,16 @@
-// lib/firebase.ts
-
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCj4kQDQRJsOCAUgPEhmeJJGM0DmcQO3f8",
-  authDomain: "trustmark-b6188.firebaseapp.com",
-  projectId: "trustmark-b6188",
-  storageBucket: "trustmark-b6188.firebasestorage.app",
-  messagingSenderId: "727698336183",
-  appId: "1:727698336183:web:73b9869f403ac324c9e032"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+
 export const db = getFirestore(app)
+export { app } // ✅ 이 줄이 없어서 발생한 오류
