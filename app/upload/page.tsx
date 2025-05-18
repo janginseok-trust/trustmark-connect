@@ -11,7 +11,7 @@ import { useUserPro } from '@/lib/hooks/useUserPro'
 import { getAuth, signInAnonymously } from 'firebase/auth'
 import { app } from '@/lib/firebase'
 
-export default function UploadPage() {
+export default function UploadClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const ref = searchParams.get('ref')
