@@ -1,4 +1,4 @@
-vimport { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
 import { buffer } from 'micro'
 import Stripe from 'stripe'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
