@@ -1,8 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  output: "standalone", // ✅ vercel에서 기본 라우팅 문제 방지
-};
+  output: 'standalone', // ✅ Vercel 배포 시 필수
+}
 
-export default nextConfig;
+export default nextConfig
