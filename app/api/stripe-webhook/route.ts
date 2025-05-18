@@ -16,7 +16,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
-// Webhook 설정 – Next.js 13 이상에서는 이렇게 사용
 export const config = {
   api: {
     bodyParser: false,
@@ -55,4 +54,10 @@ export async function POST(req: NextRequest) {
         });
         console.log(`✅ Updated isPro: true for ${customerEmail}`);
       } else {
-        console
+        console.log(`⚠️ No user found with email ${customerEmail}`);
+      }
+    }
+  }
+
+  return new NextResponse('Webhook received', { status: 200 });
+}
