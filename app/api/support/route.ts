@@ -1,5 +1,4 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-import OpenAI from 'openai'
+import { OpenAI } from 'openai'
 import { NextResponse } from 'next/server'
 
 const openai = new OpenAI({
@@ -7,14 +6,18 @@ const openai = new OpenAI({
 })
 
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  try {
+    const { message } = await req.json()
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    stream: true,
-    messages,
-  })
+    const chatCompletion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: message }],
+    })
 
-  const stream = OpenAIStream(response)
-  return new StreamingTextResponse(stream)
+    const reply = chatCompletion.choices[0]?.message?.content ?? 'No response'
+    return NextResponse.json({ reply })
+  } catch (err) {
+    console.error('❌ AI API error:', err)
+    return new NextResponse('Error calling OpenAI', { status: 500 })
+  }
 }
