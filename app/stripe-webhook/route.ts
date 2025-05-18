@@ -10,13 +10,13 @@ export const config = {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16' as any, // 타입 오류 회피
+  apiVersion: '2023-10-16' as any, // 버전 type 강제 회피
 })
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 export async function POST(req: NextRequest) {
-  const rawBody = Buffer.from(await req.arrayBuffer()) // ✅ micro 제거됨
+  const rawBody = Buffer.from(await req.arrayBuffer()) // ✅ 여기가 핵심 수정
   const sig = req.headers.get('stripe-signature')
 
   let event: Stripe.Event
