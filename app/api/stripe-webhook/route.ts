@@ -11,9 +11,9 @@ if (!admin.apps.length) {
 }
 const db = getFirestore();
 
-// Stripe 초기화
+// Stripe 초기화 (타입 오류 우회)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2023-10-16' as any,
 });
 
 export const config = {
