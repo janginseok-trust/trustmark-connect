@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server'
-import { buffer } from 'micro'
 import Stripe from 'stripe'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import { app } from '@/lib/firebase'
@@ -11,13 +10,13 @@ export const config = {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16',
+  apiVersion: '2023-10-16' as any,
 })
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 export async function POST(req: NextRequest) {
-  const rawBody = await req.arrayBuffer()
+  const rawBody = Buffer.from(await req.arrayBuffer()) // ✅ micro 없이 처리
   const sig = req.headers.get('stripe-signature')
 
   let event: Stripe.Event
