@@ -7,18 +7,17 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json()
+    const { messages } = await req.json()
 
     const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: message }],
+      messages: messages || [],
     })
 
     const reply = chatCompletion.choices[0]?.message?.content ?? 'No response'
-
     return NextResponse.json({ reply })
   } catch (err) {
-    console.error('❌ AI API error:', err)
-    return new NextResponse('Error calling OpenAI', { status: 500 })
+    console.error('❌ OpenAI error:', err)
+    return new NextResponse('Error calling OpenAI API', { status: 500 })
   }
 }
