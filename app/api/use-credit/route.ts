@@ -1,36 +1,36 @@
-// 1. Firestore 구조: users/{address}/credits: number
+import { NextResponse } from "next/server"
+import { cert, getApps, getApp, initializeApp } from "firebase-admin/app"
+import { getFirestore } from "firebase-admin/firestore"
 
-// 2. API: /api/use-credit/route.ts
-
-import { NextResponse } from 'next/server'
-import { getFirestore } from 'firebase-admin/firestore'
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import credentials from '@/lib/firebase-admin-creds.json'
-
-if (getApps().length === 0) {
-  initializeApp({ credential: cert(credentials) })
+const firebaseAdminConfig = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 }
 
-const db = getFirestore()
+const app = getApps().length === 0
+  ? initializeApp({ credential: cert(firebaseAdminConfig) })
+  : getApp()
+
+const db = getFirestore(app)
 
 export async function POST(req: Request) {
   const { address } = await req.json()
+
   if (!address) {
-    return NextResponse.json({ error: 'Missing address' }, { status: 400 })
+    return NextResponse.json({ success: false })
   }
 
-  const userRef = db.collection('users').doc(address.toLowerCase())
-  const userSnap = await userRef.get()
+  const userRef = db.collection("users").doc(address.toLowerCase())
+  const userDoc = await userRef.get()
 
-  if (!userSnap.exists || typeof userSnap.data()?.credits !== 'number') {
-    return NextResponse.json({ error: 'No credits' }, { status: 403 })
+  if (!userDoc.exists || !userDoc.data()?.credit || userDoc.data()?.credit < 1) {
+    return NextResponse.json({ success: false })
   }
 
-  const credits = userSnap.data()!.credits
-  if (credits < 1) {
-    return NextResponse.json({ error: 'Insufficient credits' }, { status: 403 })
-  }
+  await userRef.update({
+    credit: userDoc.data()?.credit - 1,
+  })
 
-  await userRef.update({ credits: credits - 1 })
-  return NextResponse.json({ success: true, remaining: credits - 1 })
+  return NextResponse.json({ success: true })
 }

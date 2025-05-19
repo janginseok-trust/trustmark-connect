@@ -1,30 +1,33 @@
-import { NextResponse } from 'next/server'
-import { getFirestore } from 'firebase-admin/firestore'
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import credentials from '@/lib/firebase-admin-creds.json'
+import { NextResponse } from "next/server"
+import { cert, getApps, getApp, initializeApp } from "firebase-admin/app"
+import { getFirestore } from "firebase-admin/firestore"
 
-if (getApps().length === 0) {
-  initializeApp({
-    credential: cert(credentials),
-  })
+const firebaseAdminConfig = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 }
 
-const db = getFirestore()
+const app = getApps().length === 0
+  ? initializeApp({ credential: cert(firebaseAdminConfig) })
+  : getApp()
+
+const db = getFirestore(app)
 
 export async function POST(req: Request) {
-  const { address, message, signature } = await req.json()
+  const { message, address, signature, referralCode } = await req.json()
 
-  if (!address || !message || !signature) {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  if (!message || !address || !signature) {
+    return NextResponse.json({ success: false })
   }
 
-  const createdAt = new Date().toISOString()
-  const doc = await db.collection('records').add({
-    address: address.toLowerCase(),
+  await db.collection("records").add({
     message,
+    address: address.toLowerCase(),
     signature,
-    createdAt,
+    referralCode: referralCode || null,
+    createdAt: Date.now(),
   })
 
-  return NextResponse.json({ id: doc.id })
+  return NextResponse.json({ success: true })
 }

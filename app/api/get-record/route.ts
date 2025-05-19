@@ -1,29 +1,32 @@
-import { NextResponse } from 'next/server'
-import { getFirestore } from 'firebase-admin/firestore'
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
-import credentials from '@/lib/firebase-admin-creds.json'
+import { NextResponse } from "next/server"
+import { cert, getApps, getApp, initializeApp } from "firebase-admin/app"
+import { getFirestore } from "firebase-admin/firestore"
 
-if (getApps().length === 0) {
-  initializeApp({
-    credential: cert(credentials),
-  })
+const firebaseAdminConfig = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 }
 
-const db = getFirestore()
+const app = getApps().length === 0
+  ? initializeApp({ credential: cert(firebaseAdminConfig) })
+  : getApp()
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const id = searchParams.get('id')
+const db = getFirestore(app)
 
-  if (!id) {
-    return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
+export async function POST(req: Request) {
+  const { address } = await req.json()
+
+  if (!address) {
+    return NextResponse.json({ records: [] })
   }
 
-  const doc = await db.collection('records').doc(id).get()
+  const snapshot = await db
+    .collection("records")
+    .where("address", "==", address.toLowerCase())
+    .orderBy("createdAt", "desc")
+    .get()
 
-  if (!doc.exists) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  return NextResponse.json(doc.data())
+  const records = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+  return NextResponse.json({ records })
 }
