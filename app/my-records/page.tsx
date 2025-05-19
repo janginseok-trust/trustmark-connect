@@ -14,9 +14,9 @@ export default function MyRecords() {
     if (!address) return
 
     const fetchRecords = async () => {
-      const res = await fetch('/api/get-records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/get-records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       })
 
@@ -24,27 +24,29 @@ export default function MyRecords() {
       setRecords(data.records || [])
       setLoading(false)
 
+      // 🔒 열람 제한 (3개 초과시 업그레이드로 리디렉션)
       if ((data.records || []).length > 3) {
-        router.push('/pro-required')
+        router.push("/pro-required")
       }
     }
 
     fetchRecords()
   }, [address, router])
 
-  if (!address) return <p className="text-center mt-10">Please connect your wallet.</p>
-  if (loading) return <p className="text-center mt-10">Loading records...</p>
-  if (records.length === 0) return <p className="text-center mt-10">No records found.</p>
+  if (!address) return <p className="p-4">Please connect your wallet.</p>
+  if (loading) return <p className="p-4">Loading records...</p>
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 space-y-6">
-      <h1 className="text-2xl font-bold text-center">My Records</h1>
-      {records.map((record, idx) => (
-        <div key={idx} className="p-4 border rounded shadow">
-          <p className="text-sm text-gray-500">#{idx + 1}</p>
-          <p>{record.message}</p>
-        </div>
-      ))}
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">My Records</h1>
+      <ul className="space-y-2">
+        {records.map((r, i) => (
+          <li key={i} className="border p-2 rounded text-sm">
+            <div><b>{r.message}</b></div>
+            <div className="text-xs text-gray-500">{r.createdAt}</div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

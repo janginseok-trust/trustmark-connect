@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { doc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import PdfButton from '@/components/PdfButton'
 
 export default function VerifyRecordPage() {
   const { id } = useParams()
@@ -45,6 +46,13 @@ export default function VerifyRecordPage() {
         <p><strong>🧾 Message:</strong> {record.message || 'No content available'}</p>
         <p><strong>🕒 Created At:</strong> {createdAt}</p>
         <p><strong>🧑‍💼 Signer:</strong> {record.owner || 'Unknown'}</p>
+
+        {record.message && (
+          <div className="mt-4">
+            <PdfButton message={record.message} />
+          </div>
+        )}
+
         <div className="mt-4 text-green-600 font-medium">
           ✅ This record is verified and trusted by Trustmark.
         </div>
