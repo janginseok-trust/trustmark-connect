@@ -1,14 +1,13 @@
-// app/api/get-records/route.ts
-import { NextResponse } from 'next/server';
-import { cert, getApps, getApp, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { NextResponse } from "next/server";
+import { cert, getApps, getApp, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
-const firebaseAdminConfig = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
+// 🔐 base64 인코딩된 Firebase 환경변수 디코딩
+const base64 = process.env.FIREBASE_ADMIN_KEY_BASE64 || "";
+const jsonString = Buffer.from(base64, "base64").toString("utf-8");
+const firebaseAdminConfig = JSON.parse(jsonString);
 
+// 🔧 Firebase 초기화
 const app =
   getApps().length === 0
     ? initializeApp({ credential: cert(firebaseAdminConfig) })
@@ -16,18 +15,19 @@ const app =
 
 const db = getFirestore(app);
 
+// ✅ GET 요청 처리
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const address = searchParams.get('address');
+  const address = searchParams.get("address");
 
   if (!address) {
-    return NextResponse.json({ error: 'Missing address' }, { status: 400 });
+    return NextResponse.json({ error: "Missing address" }, { status: 400 });
   }
 
   const snapshot = await db
-    .collection('proofs')
-    .where('address', '==', address)
-    .orderBy('createdAt', 'desc')
+    .collection("proofs")
+    .where("address", "==", address)
+    .orderBy("createdAt", "desc")
     .get();
 
   const records = snapshot.docs.map((doc) => ({
