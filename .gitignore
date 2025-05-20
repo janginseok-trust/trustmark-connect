@@ -1,1 +1,28 @@
+# dependencies
+node_modules/
+.pnpm-debug.log
+package-lock.json
+
+# production
+.next/
+out/
+dist/
+
+# environment
+.env
+.env.local
+.env.*.local
+
+# Firebase private key
 firebase-admin-creds.json
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# system
+.DS_Store
+.vscode/
