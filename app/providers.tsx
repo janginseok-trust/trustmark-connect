@@ -4,10 +4,7 @@ import { ReactNode } from 'react'
 import { WagmiProvider, http } from 'wagmi'
 import { mainnet, polygon, arbitrum } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  RainbowKitProvider,
-  getDefaultConfig,
-} from '@rainbow-me/rainbowkit'
+import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 
 const config = getDefaultConfig({
   appName: 'Trustmark',
@@ -27,12 +24,8 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          appInfo={{
-            appName: 'Trustmark',
-            disclaimer: () => null, // ← 이 줄이 핵심
-          }}
-          coolMode
-          locale="en"
+          appInfo={{ appName: '' }} // ❌ 도움말 제거
+          showRecentTransactions={false}
         >
           {children}
         </RainbowKitProvider>
