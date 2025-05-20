@@ -4,7 +4,10 @@ import { ReactNode } from 'react'
 import { WagmiProvider, http } from 'wagmi'
 import { mainnet, polygon, arbitrum } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import {
+  getDefaultConfig,
+  RainbowKitProvider
+} from '@rainbow-me/rainbowkit'
 
 const config = getDefaultConfig({
   appName: 'Trustmark',
@@ -24,11 +27,10 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          locale="en"
-          appInfo={{
-            appName: 'Trustmark',
-            learnMoreUrl: '', // ← 빈 값으로 넣으면 "What is a Wallet?" 안 뜸
-          }}
+          appInfo={{ appName: 'Trustmark' }}
+          locale="en-US"
+          showRecentTransactions={false}
+          modalSize="compact" // 👈 이 줄이 하단 안내 + 이미지 제거
         >
           {children}
         </RainbowKitProvider>
