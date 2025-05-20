@@ -23,7 +23,13 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider locale="en">
+        <RainbowKitProvider
+          locale="en"
+          appInfo={{
+            appName: 'Trustmark',
+            learnMoreUrl: '', // ← 빈 값으로 넣으면 "What is a Wallet?" 안 뜸
+          }}
+        >
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
