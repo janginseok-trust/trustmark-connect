@@ -5,10 +5,8 @@ import { WagmiProvider, http } from 'wagmi'
 import { mainnet, polygon, arbitrum } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
-  getDefaultConfig,
   RainbowKitProvider,
-  Theme,
-  darkTheme,
+  getDefaultConfig,
 } from '@rainbow-me/rainbowkit'
 
 const config = getDefaultConfig({
@@ -29,13 +27,12 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          showRecentTransactions={false}
-          locale="en" // 영어 고정
           appInfo={{
             appName: 'Trustmark',
-            // 👇 이 부분이 'What is a Wallet?' 박스 제거 핵심
-            learnMoreUrl: undefined,
+            disclaimer: () => null, // ← 이 줄이 핵심
           }}
+          coolMode
+          locale="en"
         >
           {children}
         </RainbowKitProvider>
