@@ -1,4 +1,3 @@
-// lib/firebase-admin.ts
 import { initializeApp, cert, getApps } from "firebase-admin/app"
 import { getFirestore } from "firebase-admin/firestore"
 
@@ -8,8 +7,9 @@ const firebaseAdminConfig = {
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 }
 
-const app = getApps().length === 0
-  ? initializeApp({ credential: cert(firebaseAdminConfig) })
-  : getApps()[0]
+const app =
+  getApps().length === 0
+    ? initializeApp({ credential: cert(firebaseAdminConfig) })
+    : getApps()[0]
 
 export const db = getFirestore(app)
