@@ -1,52 +1,51 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
 
-export default function MyRecords() {
-  const { address } = useAccount()
-  const router = useRouter()
-  const [records, setRecords] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+export default function MyRecordsPage() {
+  const { address } = useAccount();
+  const [records, setRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!address) return
-
     const fetchRecords = async () => {
-      const res = await fetch("/api/get-records", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
+      if (!address) return;
 
-      const data = await res.json()
-      setRecords(data.records || [])
-      setLoading(false)
+      try {
+        const res = await fetch(`/api/get-records?address=${address}`);
+        if (!res.ok) {
+          console.error('Failed to fetch records:', res.statusText);
+          setLoading(false);
+          return;
+        }
 
-      // 🔒 열람 제한 (3개 초과시 업그레이드로 리디렉션)
-      if ((data.records || []).length > 3) {
-        router.push("/pro-required")
+        const data = await res.json();
+        setRecords(data.records || []);
+      } catch (error) {
+        console.error('Error fetching records:', error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchRecords()
-  }, [address, router])
+    fetchRecords();
+  }, [address]);
 
-  if (!address) return <p className="p-4">Please connect your wallet.</p>
-  if (loading) return <p className="p-4">Loading records...</p>
+  if (loading) return <div>Loading records...</div>;
+  if (!records.length) return <div>No records found.</div>;
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">My Records</h1>
+      <h1 className="text-xl font-semibold mb-4">My Records</h1>
       <ul className="space-y-2">
-        {records.map((r, i) => (
-          <li key={i} className="border p-2 rounded text-sm">
-            <div><b>{r.message}</b></div>
-            <div className="text-xs text-gray-500">{r.createdAt}</div>
+        {records.map((record) => (
+          <li key={record.id} className="border p-4 rounded bg-white shadow">
+            <div><strong>Hash:</strong> {record.hash}</div>
+            <div><strong>Time:</strong> {new Date(record.createdAt._seconds * 1000).toLocaleString()}</div>
           </li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
