@@ -1,33 +1,23 @@
-import { NextResponse } from "next/server"
-import { cert, getApps, getApp, initializeApp } from "firebase-admin/app"
-import { getFirestore } from "firebase-admin/firestore"
-
-const firebaseAdminConfig = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-}
-
-const app = getApps().length === 0
-  ? initializeApp({ credential: cert(firebaseAdminConfig) })
-  : getApp()
+import { NextResponse } from 'next/server'
+import { getFirestore } from 'firebase-admin/firestore'
+import app from '@/lib/firebase/firebase-admin'
+import { getAddressFromHeaders } from '@/lib/firebase/getUser'
 
 const db = getFirestore(app)
 
 export async function POST(req: Request) {
-  const { message, address, signature, referralCode } = await req.json()
+  const address = getAddressFromHeaders(req.headers)
+  if (!address) return NextResponse.json({ success: false, error: 'No address' })
 
-  if (!message || !address || !signature) {
-    return NextResponse.json({ success: false })
-  }
+  const { data } = await req.json()
+  if (!data) return NextResponse.json({ success: false, error: 'No data' })
 
-  await db.collection("records").add({
-    message,
+  const recordRef = db.collection('records').doc()
+  await recordRef.set({
     address: address.toLowerCase(),
-    signature,
-    referralCode: referralCode || null,
+    ...data,
     createdAt: Date.now(),
   })
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, id: recordRef.id })
 }

@@ -1,36 +1,26 @@
-import { NextResponse } from "next/server"
-import { cert, getApps, getApp, initializeApp } from "firebase-admin/app"
-import { getFirestore } from "firebase-admin/firestore"
-
-const firebaseAdminConfig = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-}
-
-const app = getApps().length === 0
-  ? initializeApp({ credential: cert(firebaseAdminConfig) })
-  : getApp()
+import { NextResponse } from 'next/server'
+import { getFirestore } from 'firebase-admin/firestore'
+import app from '@/lib/firebase/firebase-admin'
+import { getAddressFromHeaders } from '@/lib/firebase/getUser'
 
 const db = getFirestore(app)
 
 export async function POST(req: Request) {
-  const { address } = await req.json()
+  const address = getAddressFromHeaders(req.headers)
+  if (!address) return NextResponse.json({ success: false, error: 'No address' })
 
-  if (!address) {
-    return NextResponse.json({ success: false })
+  const userRef = db.collection('users').doc(address.toLowerCase())
+  const userSnap = await userRef.get()
+  if (!userSnap.exists) {
+    return NextResponse.json({ success: false, error: 'User not found' })
   }
 
-  const userRef = db.collection("users").doc(address.toLowerCase())
-  const userDoc = await userRef.get()
-
-  if (!userDoc.exists || !userDoc.data()?.credit || userDoc.data()?.credit < 1) {
-    return NextResponse.json({ success: false })
+  const credits = userSnap.data()?.credits ?? 0
+  if (credits < 1) {
+    return NextResponse.json({ success: false, error: 'Not enough credits' })
   }
 
-  await userRef.update({
-    credit: userDoc.data()?.credit - 1,
-  })
+  await userRef.update({ credits: credits - 1 })
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, credits: credits - 1 })
 }

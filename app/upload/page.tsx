@@ -1,31 +1,35 @@
-'use client'
+// app/upload/page.tsx
 
-import { useEffect } from 'react'
-import { useAccount } from 'wagmi'
-import { useRouter } from 'next/navigation'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import UploadClient from './UploadClient';
 
 export default function UploadPage() {
-  const { isConnected, address } = useAccount()
-  const router = useRouter()
+  const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    if (!isConnected) {
-      router.push('/')
-    } else {
-      // Firestore에서 Pro 여부 확인 후 업로드 페이지 or 제한 페이지로 이동
-      const checkProStatus = async () => {
-        const res = await fetch(`/api/check-pro?address=${address}`)
-        const data = await res.json()
-        if (data.isPro) {
-          router.push('/upload/form')
-        } else {
-          router.push('/pro-required')
-        }
+    async function checkPro() {
+      const res = await fetch('/api/check-pro');
+      const data = await res.json();
+
+      if (!data.isPro) {
+        router.replace('/pro-required');
+      } else {
+        setIsPro(true);
       }
 
-      checkProStatus()
+      setLoading(false);
     }
-  }, [isConnected, address, router])
 
-  return null
+    checkPro();
+  }, [router]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!isPro) return null;
+
+  return <UploadClient />;
 }

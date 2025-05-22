@@ -1,28 +1,25 @@
+import { NextResponse } from 'next/server'
+import { getFirestore } from 'firebase-admin/firestore'
+import app from '@/lib/firebase/firebase-admin'
+import { getAddressFromHeaders } from '@/lib/firebase/getUser'
 
-// app/api/pdf/route.ts
-import { NextResponse } from "next/server"
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib"
+const db = getFirestore(app)
 
 export async function POST(req: Request) {
-  const { message } = await req.json()
+  const address = getAddressFromHeaders(req.headers)
+  if (!address) return NextResponse.json({ success: false, error: 'No address found' })
 
-  const pdfDoc = await PDFDocument.create()
-  const page = pdfDoc.addPage([600, 400])
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-  page.drawText(message || "No message", {
-    x: 50,
-    y: 300,
-    size: 20,
-    font,
-    color: rgb(0, 0, 0),
-  })
+  const recordsRef = db.collection('records').where('address', '==', address.toLowerCase())
+  const snapshot = await recordsRef.get()
+  const records = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 
-  const pdfBytes = await pdfDoc.save()
+  // PDF 생성 관련 비즈니스 로직 (여기에 실제 PDF 생성 함수 호출 등)
+  // const pdfBuffer = await generatePdf(records)   // 예시
 
-  return new NextResponse(Buffer.from(pdfBytes), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": 'attachment; filename="record.pdf"',
-    },
-  })
+  // 실제로는 PDF 파일을 반환하거나, 다운로드 링크를 제공해야 함
+  // 여기서는 예시로 기록 데이터만 반환
+  return NextResponse.json({ success: true, records })
 }
